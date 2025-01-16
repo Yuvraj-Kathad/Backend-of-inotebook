@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fetchuser = require('../middleware/fetchuser');
 
 const JWT_SECRET = 'Yuvisago0db0$oy!';
 
@@ -32,7 +33,7 @@ router.post('/createuser', [
       });
       const data = {
         user:{
-          id : user.id
+          id: user.id
         }
       }
       const authToken = jwt.sign(data, JWT_SECRET);
@@ -44,7 +45,7 @@ router.post('/createuser', [
         return res.status(400).json({ error: 'Email already exists' });
       }
       console.error(error);
-      res.status(500).json({ error: 'Server error' });
+      res.status(500).json({ error: 'Internal Server error' });
     }
     // try {
     //     validationResult(req).throw();
@@ -84,27 +85,30 @@ router.post('/login', [
 
     const data = {
       user:{
-        id : user.id
+        id: user.id
       }
     }
     const authToken = jwt.sign(data, JWT_SECRET);
+
     res.json({authToken});
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error!' });
+    res.status(500).json({ error: 'Internal Server error!' });
   }
 })
 
 // ROUTE-3: Get loggin User Details using POST : "/api/auth/getuser". Login required.
 
-// router.post('/getuser', async (req, res) => {
-//     try {
-      
-//     } catch (error) {
-      
-//     }
-// })
-
+router.post('/getuser', fetchuser, async (req, res) => {
+    try {
+      userId = req.user.id;
+      const user = await User.findById(userId).select("-password");
+      res.send({user});
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server error!' });
+    }
+})
 
 module.exports = router
